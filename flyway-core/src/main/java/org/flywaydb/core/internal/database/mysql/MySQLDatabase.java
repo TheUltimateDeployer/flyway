@@ -43,7 +43,7 @@ public class MySQLDatabase extends Database<MySQLConnection> {
      * Whether this is a Percona XtraDB Cluster in strict mode.
      */
     private final boolean pxcStrict;
-
+    
     /**
      * Creates a new instance.
      *
@@ -99,6 +99,19 @@ public class MySQLDatabase extends Database<MySQLConnection> {
 
         );
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @Override
     public final void ensureSupported() {

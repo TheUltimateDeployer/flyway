@@ -58,6 +58,9 @@ public enum DatabaseType {
      */
     INFORMIX(Types.VARCHAR),
 
+
+    MARIADB(Types.VARCHAR),
+
     /**
      * For regular MySQL, MariaDB and Google Cloud SQL.
      */
@@ -112,12 +115,13 @@ public enum DatabaseType {
     public static DatabaseType fromJdbcConnection(Connection connection) {
         DatabaseMetaData databaseMetaData = JdbcUtils.getDatabaseMetaData(connection);
         String databaseProductName = JdbcUtils.getDatabaseProductName(databaseMetaData);
+        String databaseProductVersion = JdbcUtils.getDatabaseProductVersion(databaseMetaData);
         String postgreSQLVersion = databaseProductName.startsWith("PostgreSQL") ? getPostgreSQLVersion(connection) : "";
 
-        return fromDatabaseProductNameAndPostgreSQLVersion(databaseProductName, postgreSQLVersion);
+        return fromDatabaseProductNameAndPostgreSQLVersion(databaseProductName, databaseProductVersion, postgreSQLVersion);
     }
 
-    private static DatabaseType fromDatabaseProductNameAndPostgreSQLVersion(String databaseProductName, String postgreSQLVersion) {
+    private static DatabaseType fromDatabaseProductNameAndPostgreSQLVersion(String databaseProductName, String databaseProductVersion, String postgreSQLVersion) {
         if (databaseProductName.startsWith("Apache Derby")) {
             return DERBY;
         }
@@ -133,6 +137,14 @@ public enum DatabaseType {
         if (databaseProductName.startsWith("Microsoft SQL Server")) {
             return SQLSERVER;
         }
+
+        // #2289: MariaDB JDBC driver 2.4.0 and newer report MariaDB as "MariaDB"
+        if (databaseProductName.toUpperCase().startsWith("MARIADB")
+                // Older versions of the driver report MariaDB as "MySQL"
+                || (databaseProductName.contains("MySQL") && databaseProductVersion.contains("MariaDB"))) {
+            return MARIADB;
+        }
+
         if (databaseProductName.contains("MySQL")) {
             // Google Cloud SQL returns different names depending on the environment and the SDK version.
             //   ex.: Google SQL Service/MySQL
